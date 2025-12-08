@@ -8,7 +8,7 @@ from tkinter import messagebox
 
 import customtkinter as ctk
 
-from core_bridge_fixed import GameCore
+from core_bridge import GameCore
 
 
 class Language(Enum):
@@ -138,12 +138,16 @@ class MenuFrame(ctk.CTkFrame):
     def __init__(self, master: "GameApp"):
         super().__init__(master, fg_color="white")
         self.master_app = master
-        self.title_label = ctk.CTkLabel(self, font=("Segoe UI", 32, "bold"))
+
+        self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.content_frame.place(relx=0.5, rely=0.4, anchor="center") 
+        
+        self.title_label = ctk.CTkLabel(self.content_frame, font=("Segoe UI", 32, "bold"))
         self.title_label.pack(pady=30)
 
-        self.start_button = ctk.CTkButton(self, text="", width=220, height=45, command=self.master_app.show_game)
-        self.stats_button = ctk.CTkButton(self, text="", width=220, height=45, command=self.master_app.show_stats)
-        self.exit_button = ctk.CTkButton(self, text="", width=220, height=45, command=self.master_app.destroy)
+        self.start_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_game)
+        self.stats_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_stats)
+        self.exit_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.destroy)
 
         self.start_button.pack(pady=10)
         self.stats_button.pack(pady=10)

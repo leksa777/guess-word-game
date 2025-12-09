@@ -72,7 +72,50 @@ TRANSLATIONS = {
         "btn_language_to_en": "English",
     },
 }
-
+CATEGORY_TRANSLATIONS = {
+    Language.EN: {
+        "ANIMAL": "Animal",
+        "CAR_BRAND": "Car brand",
+        "CITY": "City",
+        "COLOR": "Color",
+        "EDUCATION": "Education",
+        "FINANCE": "Finance",
+        "FOOD": "Food",
+        "FRUIT": "Fruit",
+        "GEOGRAPHY": "Geography",
+        "HARDWARE": "Hardware",
+        "OPERATING_SYSTEM": "Operating system",
+        "PROFESSION": "Profession",
+        "PROGRAMMING": "Programming",
+        "SEASON": "Season",
+        "SOCIAL": "Social",
+        "SPACE": "Space",
+        "SPORT": "Sport",
+        "TECHNOLOGY": "Technology",
+        "ANY": "Any", 
+    },
+    Language.UK: {
+        "ANIMAL": "Тварина",
+        "CAR_BRAND": "Марка авто",
+        "CITY": "Місто",
+        "COLOR": "Колір",
+        "EDUCATION": "Освіта",
+        "FINANCE": "Фінанси",
+        "FOOD": "Їжа",
+        "FRUIT": "Фрукт",
+        "GEOGRAPHY": "Географія",
+        "HARDWARE": "Апаратне забезпечення",
+        "OPERATING_SYSTEM": "Операційна система",
+        "PROFESSION": "Професія",
+        "PROGRAMMING": "Програмування",
+        "SEASON": "Сезон",
+        "SOCIAL": "Соціальне",
+        "SPACE": "Космос",
+        "SPORT": "Спорт",
+        "TECHNOLOGY": "Технології",
+        "ANY": "Будь-яка", 
+    },
+}
 
 class LetterStatus(IntEnum):
     ABSENT = 0
@@ -85,7 +128,6 @@ STATUS_COLORS = {
     LetterStatus.PRESENT: "#f39c12",
     LetterStatus.ABSENT: "#c0392b",
 }
-
 
 @dataclass
 class GameStats:
@@ -145,6 +187,17 @@ class MenuFrame(ctk.CTkFrame):
         self.title_label = ctk.CTkLabel(self.content_frame, font=("Segoe UI", 32, "bold"))
         self.title_label.pack(pady=30)
 
+        self.category_combobox = ctk.CTkComboBox(
+            self.content_frame, 
+            width=220, 
+            height=45,
+            values=self.master_app.get_friendly_categories(),
+            command=self._category_selected
+        )
+        selected_friendly_name = self.master_app.get_friendly_category_name(self.master_app.selected_category)
+        self.category_combobox.set(selected_friendly_name)
+        self.category_combobox.pack(pady=10)
+
         self.start_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_game)
         self.stats_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_stats)
         self.exit_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.destroy)
@@ -152,9 +205,23 @@ class MenuFrame(ctk.CTkFrame):
         self.start_button.pack(pady=10)
         self.stats_button.pack(pady=10)
         self.exit_button.pack(pady=10)
+        
+    def _update_combobox_display(self) -> None:
+        selected_friendly_name = self.master_app.get_friendly_category_name(
+            self.master_app.selected_category
+        )
+        self.category_combobox.set(selected_friendly_name)
+
+    def _category_selected(self, choice: str) -> None:
+        self.master_app.selected_category = choice
+        self.after(5, self._update_combobox_display)
+        self.master_app.game_frame.refresh_texts()
 
     def refresh_texts(self) -> None:
         self.title_label.configure(text=self.master_app.t("menu_title"))
+        self.category_combobox.configure(values=self.master_app.get_friendly_categories())
+        self._update_combobox_display() 
+        
         self.start_button.configure(text=self.master_app.t("btn_start"))
         self.stats_button.configure(text=self.master_app.t("btn_stats"))
         self.exit_button.configure(text=self.master_app.t("btn_exit"))
@@ -199,17 +266,18 @@ class GameFrame(ctk.CTkFrame):
         self.guess_rows: list[ctk.CTkFrame] = []
         self.placeholder_tiles: list[ctk.CTkLabel] = []
 
-        # Top bar
         self.top_bar = ctk.CTkFrame(self, fg_color="white")
         self.title_label = ctk.CTkLabel(self.top_bar, font=("Segoe UI", 26, "bold"))
-        self.target_label = ctk.CTkLabel(self.top_bar, font=("Segoe UI", 26, "bold"))
+      
+        self.category_label = ctk.CTkLabel(self.top_bar, font=("Segoe UI", 18, "italic"), text_color="#2c3e50")
+        
+        self.word_hint_label = ctk.CTkLabel(self.top_bar, font=("Segoe UI", 26, "bold"))
         self.top_right_vbox = ctk.CTkFrame(self.top_bar, fg_color="white")
         self.language_button = ctk.CTkButton(self.top_right_vbox, width=140, text="", command=lambda: self.master_app.toggle_language())
         self.language_button.pack(side="top", pady=(4, 2))
         self.hearts_frame = ctk.CTkFrame(self.top_right_vbox, fg_color="white")
         self.hearts_frame.pack(side="top")
 
-        # Layout
         self.placeholder_row = ctk.CTkFrame(self, fg_color="white")
         self.guess_container = ctk.CTkScrollableFrame(self, fg_color="#f8f8f8")
 
@@ -226,7 +294,8 @@ class GameFrame(ctk.CTkFrame):
     def _build(self) -> None:
         self.top_bar.pack(fill="x", padx=10, pady=(10, 5))
         self.title_label.pack(side="left")
-        self.target_label.pack(side="left", padx=8)
+        self.category_label.pack(side="left", padx=8) 
+        self.word_hint_label.pack(side="left", padx=8) 
         self.top_right_vbox.pack(side="right", padx=10)
         self._build_hearts()
 
@@ -252,8 +321,9 @@ class GameFrame(ctk.CTkFrame):
             self.hearts.append(heart)
 
     def start_game(self) -> None:
+        selected_category = self.master_app.selected_category 
         try:
-            self.master_app.core.start_game()
+            self.master_app.core.start_game(category=selected_category)
         except Exception as exc:
             messagebox.showerror(self.master_app.t("error_title"), str(exc))
             return
@@ -353,7 +423,7 @@ class GameFrame(ctk.CTkFrame):
                 secret = self._latest_secret
             if secret:
                 mask_word = secret
-        self.target_label.configure(text=self.master_app.t("word_hint", mask=mask_word))
+        self.word_hint_label.configure(text=self.master_app.t("word_hint", mask=mask_word))
         self._update_placeholder_tiles(mask_word)
         self._update_hearts(attempts_left)
 
@@ -390,7 +460,11 @@ class GameFrame(ctk.CTkFrame):
 
     def refresh_texts(self) -> None:
         self.title_label.configure(text=self.master_app.t("game_title"))
-        self.target_label.configure(text=self.master_app.t("word_hint", mask=("?" * self.word_length)))
+    
+        friendly_category = self.master_app.get_friendly_category_name(self.master_app.selected_category)
+        self.category_label.configure(text=f"({friendly_category})")
+        
+        self.word_hint_label.configure(text=self.master_app.t("word_hint", mask=("?" * self.word_length)))
         self.restart_button.configure(text=self.master_app.t("btn_restart"))
         self.back_button.configure(text=self.master_app.t("btn_back"))
         self.submit_button.configure(text=self.master_app.t("btn_submit"))
@@ -412,16 +486,19 @@ class GameApp(ctk.CTk):
         self.language = Language.EN
         self.stats_store = StatsStore(self._ui_dir / "stats.json", persist=True)
 
-        # load core
+        self.available_categories: list[str] = ["ANY"] 
+        self._selected_category: str = "ANY"
+
         try:
             lib_path = self._resolve_library_path()
             words = self.project_root / "words.txt"
             self.core = GameCore(lib_path, words)
+            self.available_categories = [c.upper() for c in (self.core.get_categories() or ["ANY"])]
+            self._selected_category = self.available_categories[0] 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load game core: {e}")
             raise
 
-        # frames
         self.menu_frame = MenuFrame(self)
         self.game_frame = GameFrame(self)
         self.stats_frame = StatsFrame(self)
@@ -431,7 +508,9 @@ class GameApp(ctk.CTk):
         self._apply_language()
 
     def _resolve_library_path(self) -> Path:
-        binary = "game_core.dll" if self._is_windows() else ("libgame_core.dylib" if self._is_macos() else "libgame_core.so")
+        import sys
+        
+        binary = "game_core.dll" if sys.platform.startswith("win") else ("libgame_core.dylib" if sys.platform == "darwin" else "libgame_core.so")
         candidates = [
             self._ui_dir / binary,
             self.project_root / "cpp_core" / "build" / "Release" / binary,
@@ -451,21 +530,49 @@ class GameApp(ctk.CTk):
     @staticmethod
     def _is_windows() -> bool:
         import sys
-
         return sys.platform.startswith("win")
 
     @staticmethod
     def _is_macos() -> bool:
         import sys
-
         return sys.platform == "darwin"
+
+    @property
+    def selected_category(self) -> str:
+        return self._selected_category
+
+    @selected_category.setter
+    def selected_category(self, value: str) -> None:
+        key = self.get_category_key(value) 
+        if key in self.available_categories:
+            self._selected_category = key
+
+    def get_friendly_category_name(self, category_key: str) -> str:
+        return CATEGORY_TRANSLATIONS.get(self.language, {}).get(
+            category_key, 
+            category_key.replace("_", " ").title()
+        )
+
+    def get_friendly_categories(self) -> list[str]:
+        return [
+            self.get_friendly_category_name(key) 
+            for key in self.available_categories
+        ]
+
+    def get_category_key(self, friendly_name: str) -> str:
+        translation_map = CATEGORY_TRANSLATIONS.get(self.language, {})
+        
+        for key, name in translation_map.items():
+            if name == friendly_name:
+                return key  
+        return friendly_name.replace(" ", "_").upper()
+
 
     def show_menu(self) -> None:
         self._show_frame(self.menu_frame)
 
     def show_game(self) -> None:
         self._show_frame(self.game_frame)
-        # start a new game when entering
         self.game_frame.start_game()
 
     def show_stats(self) -> None:

@@ -44,9 +44,15 @@ class GameCore:
         try:
             dll_dir = self.lib_path.parent
             target = dll_dir / "words.txt"
-            if target.resolve() != self.words_path.resolve():
+            # Only copy if the target does not already exist. Avoid overwriting
+            # an existing words.txt that may have been placed by the user or build.
+            if not target.exists():
                 shutil.copy2(self.words_path, target)
                 print(f"[DEBUG] Copied words file to {target}")
+            else:
+                # target exists; do not overwrite. If you want to force a copy,
+                # remove the target file first or run a separate update step.
+                print(f"[DEBUG] words.txt already exists next to DLL at {target}; not overwriting")
         except Exception as e:
             print(f"[WARNING] Failed to copy words.txt next to DLL: {e}")
 

@@ -103,7 +103,7 @@ def run_intro():
 
     clock = pygame.time.Clock()
     start_time = time.time()
-    duration = 4.5
+    duration = 3.0
     running = True
 
     glEnable(GL_DEPTH_TEST)
@@ -241,6 +241,29 @@ CATEGORY_TRANSLATIONS = {
         "TECHNOLOGY": "Технології",
         "ANY": "Будь-яка", 
     },
+}
+
+WORD_TRANSLATIONS_MAP = {
+    "PYTHON": "ПІТОН", "JAVA": "ДЖАВА", "SCRIPT": "СКРИПТ", "CPP": "СІПЛЮС", "RUBY": "РУБІ", "SWIFT": "СВІФТ",
+    "SERVER": "СЕРВЕР", "DATABASE": "БАЗА", "NETWORK": "МЕРЕЖА", "INTERNET": "ІНТЕРНЕТ", "CLOUD": "ХМАРА", "ROBOT": "РОБОТ",
+    "LINUX": "ЛІНУКС", "WINDOWS": "ВІНДОВС", "MACOS": "МАКОС", "ANDROID": "АНДРОЇД", "UNIX": "ЮНІКС",
+    "DISPLAY": "ЕКРАН", "MONITOR": "МОНІТОР", "KEYBOARD": "КЛАВІАТУРА", "LAPTOP": "НОУТБУК", "MEMORY": "ПАМЯТЬ", "CAMERA": "КАМЕРА",
+    "MOUSE": "МИША", "PRINTER": "ПРИНТЕР", "ROUTER": "РОУТЕР",
+    "UKRAINE": "УКРАЇНА", "POLAND": "ПОЛЬЩА", "FRANCE": "ФРАНЦІЯ", "CANADA": "КАНАДА", "BRAZIL": "БРАЗИЛІЯ",
+    "JAPAN": "ЯПОНІЯ", "ITALY": "ІТАЛІЯ", "SPAIN": "ІСПАНІЯ", "CHINA": "КИТАЙ",
+    "LONDON": "ЛОНДОН", "PARIS": "ПАРИЖ", "KYIV": "КИЇВ", "BERLIN": "БЕРЛІН", "TOKYO": "ТОКІО", "LVIV": "ЛЬВІВ", "ROME": "РИМ", "OSLO": "ОСЛО",
+    "APPLE": "ЯБЛУКО", "BANANA": "БАНАН", "ORANGE": "АПЕЛЬСИН", "LEMON": "ЛИМОН", "CHERRY": "ВИШНЯ", "MANGO": "МАНГО", "PEACH": "ПЕРСИК", "GRAPE": "ВИНОГРАД",
+    "PIZZA": "ПІЦА", "BURGER": "БУРГЕР", "SUSHI": "СУШІ", "PASTA": "ПАСТА", "BREAD": "ХЛІБ", "SOUP": "СУП", "STEAK": "СТЕЙК", "CAKE": "ТОРТ",
+    "TIGER": "ТИГР", "EAGLE": "ОРЕЛ", "SHARK": "АКУЛА", "PANDA": "ПАНДА", "ZEBRA": "ЗЕБРА", "HORSE": "КІНЬ", "RABBIT": "КРОЛИК", "LION": "ЛЕВ", "WOLF": "ВОВК", "BEAR": "ВЕДМІДЬ",
+    "TOYOTA": "ТОЙОТА", "TESLA": "ТЕСЛА", "HONDA": "ХОНДА", "VOLVO": "ВОЛЬВО", "FORD": "ФОРД", "BMW": "БМВ", "AUDI": "АУДІ", "NISSAN": "НІССАН",
+    "SOCCER": "ФУТБОЛ", "TENNIS": "ТЕНІС", "HOCKEY": "ХОКЕЙ", "BOXING": "БОКС", "RUGBY": "РЕГБІ", "GOLF": "ГОЛЬФ", "JUDO": "ДЗЮДО",
+    "DOCTOR": "ЛІКАР", "DRIVER": "ВОДІЙ", "ARTIST": "МИТЕЦЬ", "FARMER": "ФЕРМЕР", "PILOT": "ПІЛОТ", "CHEF": "КУХАР", "NURSE": "МЕДСЕСТРА",
+    "GALAXY": "ГАЛАКТИКА", "PLANET": "ПЛАНЕТА", "ORBIT": "ОРБІТА", "ROCKET": "РАКЕТА", "MOON": "МІСЯЦЬ", "MARS": "МАРС", "STAR": "ЗІРКА",
+    "SUMMER": "ЛІТО", "WINTER": "ЗИМА", "AUTUMN": "ОСІНЬ", "SPRING": "ВЕСНА",
+    "YELLOW": "ЖОВТИЙ", "PURPLE": "ФІОЛЕТОВИЙ", "SILVER": "СРІБНИЙ", "RED": "ЧЕРВОНИЙ", "BLUE": "СИНІЙ", "GREEN": "ЗЕЛЕНИЙ",
+    "SCHOOL": "ШКОЛА", "LESSON": "УРОК", "STUDENT": "СТУДЕНТ", "TEACHER": "ВЧИТЕЛЬ", "BOOK": "КНИГА", "EXAM": "ЕКЗАМЕН",
+    "FAMILY": "СІМЯ", "FRIEND": "ДРУГ", "MARKET": "РИНОК", "PARTY": "ВЕЧІРКА", "TEAM": "КОМАНДА", "GROUP": "ГРУПА",
+    "MONEY": "ГРОШІ", "DOLLAR": "ДОЛАР", "EURO": "ЄВРО", "BANK": "БАНК", "COIN": "МОНЕТА"
 }
 
 class LetterStatus(IntEnum):
@@ -534,8 +557,24 @@ class GameFrame(ctk.CTkFrame):
             secret = self.master_app.core.get_secret() or b""
             if isinstance(secret, bytes):
                 secret = secret.decode("utf-8")
+            
+            import re
+            secret = re.sub(r'[^A-Z]', '', secret.upper())
+            
         except Exception:
             secret = ""
+
+        if self.master_app.language == Language.UK:
+            if secret in WORD_TRANSLATIONS_MAP:
+                uk_secret = WORD_TRANSLATIONS_MAP[secret]
+                
+                self.master_app.core._local_secret = uk_secret
+                self.master_app.core._use_local_emulation = True
+                self.master_app.core._local_attempts = self.master_app.attempts_per_game
+                self.master_app.core._local_won = False
+                self.master_app.core._local_lost = False
+                
+                secret = uk_secret
 
         self._latest_secret = secret
         self.word_length = len(secret) if secret else 5
@@ -685,6 +724,8 @@ class GameFrame(ctk.CTkFrame):
         self.entry.configure(placeholder_text=self.master_app.t("input_placeholder"))
         lang_text = self.master_app.t("btn_language_to_uk") if self.master_app.language == Language.EN else self.master_app.t("btn_language_to_en")
         self.language_button.configure(text=lang_text)
+        if self.word_length > 0:
+            self._update_state()
 
 
 class GameApp(ctk.CTk):

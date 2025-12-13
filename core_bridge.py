@@ -36,9 +36,10 @@ class GameCore:
             target = dll_dir / "words.txt"
             if not target.exists():
                 shutil.copy2(self.words_path, target)
-                print(f"[DEBUG] Copied words file to {target}")
+               # print(f"[DEBUG] Copied words file to {target}")
             else:
-                print(f"[DEBUG] words.txt already exists next to DLL at {target}; not overwriting")
+                # print(f"[DEBUG] words.txt already exists next to DLL at {target}; not overwriting")
+                pass
         except Exception as e:
             print(f"[WARNING] Failed to copy words.txt next to DLL: {e}")
 
@@ -47,7 +48,8 @@ class GameCore:
             try:
                 self._init_db_fn()
             except Exception as e:
-                print(f"[WARNING] init_db raised: {e}")
+               # print(f"[WARNING] init_db raised: {e}")
+               pass
 
         self._get_categories_fn = self._resolve_optional("get_categories", restype=c_char_p)
         self._get_category_fn = self._resolve_optional("get_category", restype=c_char_p)
@@ -93,7 +95,7 @@ class GameCore:
         candidates = [n for n in dir(self.lib) if base_name in n]
         if candidates:
             name = candidates[0]
-            print(f"[DEBUG] Resolved native symbol '{base_name}' -> '{name}'")
+           # print(f"[DEBUG] Resolved native symbol '{base_name}' -> '{name}'")
             fn = getattr(self.lib, name)
             if restype is not None:
                 try:
@@ -117,7 +119,8 @@ class GameCore:
                     else:
                         words.append(s.strip().upper())
         except Exception as e:
-            print(f"[WARNING] Failed to load words file: {e}")
+           # print(f"[WARNING] Failed to load words file: {e}")
+           pass
         return words
 
     def get_categories(self) -> list[str]:
@@ -165,7 +168,8 @@ class GameCore:
             try:
                 self._start_game_fn(category.encode("utf-8"))
             except Exception as e:
-                print(f"[WARNING] native start_game failed: {e}")
+               # print(f"[WARNING] native start_game failed: {e}")
+               pass
 
         native_secret = None
         if self._get_secret_fn:
@@ -183,7 +187,7 @@ class GameCore:
             if not candidates:
                 raise RuntimeError("No words available to start the game")
             self._local_secret = random.choice(candidates)
-            print(f"[INFO] Using local emulation secret: {self._local_secret}")
+          #  print(f"[INFO] Using local emulation secret: {self._local_secret}")
             self._use_local_emulation = True
             self._local_attempts = attempts
             self._local_won = False
@@ -195,23 +199,28 @@ class GameCore:
     def _evaluate_guess_local(self, guess: str) -> list[int]:
         guess = guess.upper()
         secret = self._local_secret.upper()
+        
         if len(guess) != len(secret):
             raise ValueError("Guess length mismatch")
-        counts = [0] * 26
-        for ch in secret:
-            if 'A' <= ch <= 'Z':
-                counts[ord(ch) - 65] += 1
+            
+        from collections import Counter
+        counts = Counter(secret)
+        
         result = [0] * len(secret)
+        
         for i, ch in enumerate(guess):
             if ch == secret[i]:
                 result[i] = 2
-                counts[ord(ch) - 65] -= 1
+                counts[ch] -= 1
+        
         for i, ch in enumerate(guess):
             if result[i] == 2:
                 continue
-            if 'A' <= ch <= 'Z' and counts[ord(ch) - 65] > 0:
+            
+            if counts[ch] > 0:
                 result[i] = 1
-                counts[ord(ch) - 65] -= 1
+                counts[ch] -= 1
+                
         return result
 
     def guess_word(self, word: str, length: int) -> list[int]:

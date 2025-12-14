@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import webbrowser
 import json
 import sys
 import time
 import random
 from dataclasses import dataclass
+import webbrowser
 from enum import Enum, IntEnum
 from pathlib import Path
 from tkinter import messagebox
@@ -103,7 +105,7 @@ def run_intro():
 
     clock = pygame.time.Clock()
     start_time = time.time()
-    duration = 3.0
+    duration = 2.5
     running = True
 
     glEnable(GL_DEPTH_TEST)
@@ -331,7 +333,7 @@ class MenuFrame(ctk.CTkFrame):
         self.master_app = master
 
         self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.content_frame.place(relx=0.5, rely=0.4, anchor="center") 
+        self.content_frame.place(relx=0.5, rely=0.5, anchor="center") 
         
         self.title_label = ctk.CTkLabel(self.content_frame, font=("Segoe UI", 32, "bold"))
         self.title_label.pack(pady=30)
@@ -349,10 +351,16 @@ class MenuFrame(ctk.CTkFrame):
 
         self.start_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_game)
         self.stats_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.show_stats)
+        
+        self.author_button = ctk.CTkButton(self.content_frame, text="GitHub / Автор", width=220, height=45, command=self.master_app.open_author_page)
+        
         self.exit_button = ctk.CTkButton(self.content_frame, text="", width=220, height=45, command=self.master_app.destroy)
 
         self.start_button.pack(pady=10)
         self.stats_button.pack(pady=10)
+        
+        self.author_button.pack(pady=10)
+        
         self.exit_button.pack(pady=10)
         
     def _update_combobox_display(self) -> None:
@@ -735,7 +743,7 @@ class GameApp(ctk.CTk):
         self.geometry("850x650")
         self.resizable(False, False)
         self.configure(fg_color="#f2f2f2")
-
+        
         self._ui_dir = Path(__file__).resolve().parent
         self.project_root = self._ui_dir.parent
         self.language = Language.EN
@@ -785,6 +793,9 @@ class GameApp(ctk.CTk):
         else:
             pygame.mixer.music.unpause()
             return True
+           
+    def open_author_page(self):
+        webbrowser.open("https://github.com/leksahk")    
 
     def _resolve_library_path(self) -> Path:
         import sys

@@ -16,7 +16,6 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-
 import customtkinter as ctk
 
 from core_bridge import GameCore
@@ -246,7 +245,7 @@ CATEGORY_TRANSLATIONS = {
 }
 
 WORD_TRANSLATIONS_MAP = {
-    "PYTHON": "ПІТОН", "JAVA": "ДЖАВА", "SCRIPT": "СКРИПТ", "CPP": "СІПЛЮС", "RUBY": "РУБІ", "SWIFT": "СВІФТ",
+    "PYTHON": "ПАЙТОН", "JAVA": "ДЖАВА", "SCRIPT": "СКРИПТ", "CPP": "СІПЛЮС", "RUBY": "РУБІ", "SWIFT": "СВІФТ",
     "SERVER": "СЕРВЕР", "DATABASE": "БАЗА", "NETWORK": "МЕРЕЖА", "INTERNET": "ІНТЕРНЕТ", "CLOUD": "ХМАРА", "ROBOT": "РОБОТ",
     "LINUX": "ЛІНУКС", "WINDOWS": "ВІНДОВС", "MACOS": "МАКОС", "ANDROID": "АНДРОЇД", "UNIX": "ЮНІКС",
     "DISPLAY": "ЕКРАН", "MONITOR": "МОНІТОР", "KEYBOARD": "КЛАВІАТУРА", "LAPTOP": "НОУТБУК", "MEMORY": "ПАМЯТЬ", "CAMERA": "КАМЕРА",
@@ -301,7 +300,7 @@ class StatsStore:
         self.data = GameStats()
         if self.persist:
             self._load()
-
+                            
     def _load(self) -> None:
         if not self.path.exists():
             return
@@ -534,7 +533,7 @@ class GameFrame(ctk.CTkFrame):
 
         self.input_row.pack(fill="x", padx=20, pady=(0, 10))
         self.entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        self.entry.bind("<Return>", lambda _e: self._submit_guess())
+        self.entry.bind("<Return>", lambda _e: self._submit_guess()) 
         self.submit_button.pack(side="left")
 
         self.control_row.pack(pady=(0, 15))
@@ -681,7 +680,7 @@ class GameFrame(ctk.CTkFrame):
 
         self.word_hint_label.configure(text=self.master_app.t("word_hint", mask=mask_word))
         self._update_placeholder_tiles(mask_word)
-        self._update_hearts(attempts_left)
+        self._update_hearts(attempts_left) 
 
         if won and not self._game_over:
             self.master_app.stats_store.record(True)
@@ -784,7 +783,7 @@ class GameApp(ctk.CTk):
         self.menu_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         self._apply_language()
-
+                  
     def toggle_music(self) -> bool:
         self.is_muted = not self.is_muted
         if self.is_muted:
@@ -795,7 +794,7 @@ class GameApp(ctk.CTk):
             return True
            
     def open_author_page(self):
-        webbrowser.open("https://github.com/leksahk")    
+        webbrowser.open("https://github.com/leksa777")    
 
     def _resolve_library_path(self) -> Path:
         import sys

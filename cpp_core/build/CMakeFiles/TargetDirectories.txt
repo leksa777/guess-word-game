@@ -1,0 +1,3 @@
+D:/vs code/coursew/cpp_core/build/CMakeFiles/game_core.dir
+D:/vs code/coursew/cpp_core/build/CMakeFiles/ALL_BUILD.dir
+D:/vs code/coursew/cpp_core/build/CMakeFiles/ZERO_CHECK.dir

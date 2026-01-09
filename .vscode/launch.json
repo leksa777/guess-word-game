@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Guess The Word (python_ui/app.py)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/python_ui/app.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/python_ui",
+      "env": {},
+      "justMyCode": true
+    }
+  ]
+}
